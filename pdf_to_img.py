@@ -5,8 +5,8 @@ import fitz  # PyMuPDF
 output_folder = "images"
 os.makedirs(output_folder, exist_ok=True)
 
-# Funkcja do zapisywania stron jako obrazów
-def save_pages_as_images(pdf_path, output_folder, zoom_factor=2.0):  # Zwiększono zoom_factor
+# Funkcja do zapisywania obrazów z pliku PDF
+def save_images_from_pdf(pdf_path, output_folder):
     try:
         # Tworzenie osobnego folderu dla każdego pliku PDF
         pdf_name = os.path.splitext(os.path.basename(pdf_path))[0]
@@ -14,20 +14,31 @@ def save_pages_as_images(pdf_path, output_folder, zoom_factor=2.0):  # Zwiększo
         os.makedirs(pdf_output_folder, exist_ok=True)
 
         document = fitz.open(pdf_path)
+        image_count = 0
+
         for page_number in range(len(document)):
             page = document.load_page(page_number)
             
-            # Ustawienie macierzy zoomu dla lepszej jakości obrazu
-            matrix = fitz.Matrix(zoom_factor, zoom_factor)
-            pix = page.get_pixmap(matrix=matrix)
+            # Wyodrębnianie obrazów z strony
+            image_list = page.get_images(full=True)
             
-            # Tworzenie nazwy pliku
-            image_filename = f"page_{page_number + 1:03d}.png"
-            image_path = os.path.join(pdf_output_folder, image_filename)
-            
-            # Zapisywanie obrazu
-            pix.save(image_path)
-            print(f"Zapisano stronę jako obraz: {image_filename} w folderze {pdf_name}")
+            for img_index, img in enumerate(image_list):
+                xref = img[0]  # Indeks obrazu w pliku PDF
+                base_image = document.extract_image(xref)
+                image_bytes = base_image["image"]  # Obraz jako bajty
+
+                # Tworzenie nazwy pliku obrazu
+                image_filename = f"image_{page_number + 1}_{img_index + 1}.png"
+                image_path = os.path.join(pdf_output_folder, image_filename)
+
+                # Zapisanie obrazu
+                with open(image_path, "wb") as img_file:
+                    img_file.write(image_bytes)
+                image_count += 1
+                print(f"Zapisano obraz: {image_filename} w folderze {pdf_name}")
+
+        if image_count == 0:
+            print("Brak obrazów w pliku PDF.")
     except Exception as e:
         print(f"Błąd przy przetwarzaniu pliku PDF: {pdf_path}, {e}")
 
@@ -35,6 +46,6 @@ def save_pages_as_images(pdf_path, output_folder, zoom_factor=2.0):  # Zwiększo
 for filename in os.listdir():
     if filename.lower().endswith(".pdf"):
         print(f"Przetwarzanie pliku: {filename}")
-        save_pages_as_images(filename, output_folder)
+        save_images_from_pdf(filename, output_folder)
 
-print(f"Zakończono. Strony zapisano jako obrazy w folderze: {output_folder}")
+print(f"Zakończono. Obrazy zapisano w folderze: {output_folder}")
