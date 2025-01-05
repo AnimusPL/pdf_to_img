@@ -3,7 +3,7 @@ Python script saving .pdf pages as .png files.
 
 
 
-"Move the pdf file to the folder with the pdf_to_img.py file, run the commands:
+"Move the pdf file (or files) to the folder with the pdf_to_img.py file, run the commands:
 - pip install pymupdf (only if pymupdf is missing)
 - python .\pdf_to_img.py
 
