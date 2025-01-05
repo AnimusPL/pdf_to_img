@@ -6,7 +6,7 @@ output_folder = "images"
 os.makedirs(output_folder, exist_ok=True)
 
 # Funkcja do zapisywania stron jako obrazów
-def save_pages_as_images(pdf_path, output_folder):
+def save_pages_as_images(pdf_path, output_folder, zoom_factor=2.0):  # Zwiększono zoom_factor
     try:
         # Tworzenie osobnego folderu dla każdego pliku PDF
         pdf_name = os.path.splitext(os.path.basename(pdf_path))[0]
@@ -16,7 +16,10 @@ def save_pages_as_images(pdf_path, output_folder):
         document = fitz.open(pdf_path)
         for page_number in range(len(document)):
             page = document.load_page(page_number)
-            pix = page.get_pixmap()
+            
+            # Ustawienie macierzy zoomu dla lepszej jakości obrazu
+            matrix = fitz.Matrix(zoom_factor, zoom_factor)
+            pix = page.get_pixmap(matrix=matrix)
             
             # Tworzenie nazwy pliku
             image_filename = f"page_{page_number + 1:03d}.png"
